@@ -11,7 +11,18 @@ from text_parser import TextParser
 from prompt_engine import PromptEngine
 from image_generator import ImageGenerator
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Pitch Visualizer - Stability Edition")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can restrict this to your Vercel URL later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Determine if we are on Vercel
 IS_VERCEL = os.environ.get("VERCEL") == "1"

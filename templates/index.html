@@ -242,8 +242,10 @@
             btnText.innerText = 'Visualizing...';
             storyboard.innerHTML = '';
 
+            const BACKEND_URL = 'https://pitch-visualizer-p7bu.onrender.com';
+
             try {
-                const response = await fetch('/generate-storyboard', {
+                const response = await fetch(`${BACKEND_URL}/generate-storyboard`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text })
@@ -257,8 +259,11 @@
                         card.className = 'scene-card';
                         card.style.animationDelay = `${index * 0.2}s`;
                         
+                        // Ensure image URL is absolute if it's relative
+                        const imageUrl = scene.image.startsWith('http') ? scene.image : `${BACKEND_URL}${scene.image}`;
+                        
                         card.innerHTML = `
-                            <img src="${scene.image}" alt="Scene ${index + 1}" class="scene-image">
+                            <img src="${imageUrl}" alt="Scene ${index + 1}" class="scene-image">
                             <div class="scene-content">
                                 <div class="scene-label">Scene ${index + 1}</div>
                                 <div class="scene-caption">${scene.caption}</div>
