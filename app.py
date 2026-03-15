@@ -28,6 +28,10 @@ generator = ImageGenerator()
 class StoryboardRequest(BaseModel):
     text: str
 
+@app.get("/health")
+def home():
+    return {"message": "Pitch Visualizer running"}
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
