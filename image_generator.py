@@ -7,13 +7,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class ImageGenerator:
-    def __init__(self, output_dir="static/generated_images"):
+    def __init__(self, output_dir=None):
+        # Default to /tmp for serverless environments (like Vercel)
+        if output_dir is None:
+            output_dir = os.path.join("/tmp", "generated_images")
+            
         self.output_dir = output_dir
         self.api_key = os.getenv("STABILITY_API_KEY")
         self.api_host = "https://api.stability.ai"
         
         if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
+            try:
+                os.makedirs(self.output_dir, exist_ok=True)
+            except Exception as e:
+                print(f"Warning: Could not create output dir {self.output_dir}: {e}")
 
     def generate(self, prompt: str, filename: str) -> str:
         """

@@ -13,11 +13,25 @@ from image_generator import ImageGenerator
 
 app = FastAPI(title="Pitch Visualizer - Stability Edition")
 
-# Ensure static directories exist
-os.makedirs("static/generated_images", exist_ok=True)
+# Determine if we are on Vercel
+IS_VERCEL = os.environ.get("VERCEL") == "1"
 
-# Mount static files and templates
+# Set output directory to /tmp if on Vercel, else local static folder
+OUTPUT_DIR = os.path.join("/tmp", "generated_images") if IS_VERCEL else os.path.join("static", "generated_images")
+
+# Ensure static directories exist locally (skipped on Vercel since it's read-only)
+if not IS_VERCEL:
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# If on Vercel, we need to serve the /tmp folder manually or use a different mount
+if IS_VERCEL:
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+    app.mount("/generated", StaticFiles(directory=OUTPUT_DIR), name="generated")
+
 templates = Jinja2Templates(directory="templates")
 
 # Initialize modules
@@ -59,8 +73,10 @@ async def generate_storyboard(request: StoryboardRequest):
         filename = f"scene_{i+1}_{os.urandom(4).hex()}.png"
         try:
             image_filename = generator.generate(enhanced_prompt, filename)
+            # Adjust path for UI
+            image_url = f"/generated/{image_filename}" if IS_VERCEL else f"/static/generated_images/{image_filename}"
             scenes.append({
-                "image": f"/static/generated_images/{image_filename}",
+                "image": image_url,
                 "caption": sentence,
                 "prompt": enhanced_prompt
             })
