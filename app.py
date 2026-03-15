@@ -1,7 +1,7 @@
 import os
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -15,13 +15,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Pitch Visualizer - Stability Edition")
 
-# Add CORS middleware - simplified for maximum compatibility
+# Add CORS middleware with explicit Vercel support
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=["https://pitch-visualizer-p6h8.vercel.app", "*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Handle favicon and root issues
+@app.get("/favicon.ico")
+async def favicon():
+    return JSONResponse(content={})
 
 # Determine if we are on a production-like environment (Vercel or Render)
 IS_PRODUCTION = os.environ.get("VERCEL") == "1" or os.environ.get("RENDER") == "true"
@@ -60,11 +66,16 @@ async def read_root(request: Request):
 
 @app.post("/generate-storyboard")
 async def generate_storyboard(request: StoryboardRequest):
+    print(f"Received request for storyboard: {request.text[:50]}...")
     if not request.text or len(request.text.strip()) < 10:
         raise HTTPException(status_code=400, detail="Please enter a paragraph of at least 3-5 sentences.")
 
-    # 1. Sentence Segmentation
-    sentences = parser.split_into_sentences(request.text)
+    # 1. Sentence Segmentation (Lazy Load inside parser)
+    try:
+        sentences = parser.split_into_sentences(request.text)
+    except Exception as e:
+        print(f"Text parsing error: {e}")
+        raise HTTPException(status_code=500, detail="Error splitting text into sentences.")
     
     if not sentences:
         raise HTTPException(status_code=400, detail="Could not parse sentences from text.")
