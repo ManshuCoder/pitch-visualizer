@@ -91,7 +91,7 @@ async def generate_storyboard(request: StoryboardRequest):
         # 3. Image Generation (Stability AI)
         filename = f"scene_{i+1}_{os.urandom(4).hex()}.png"
         try:
-            image_filename = generator.generate(enhanced_prompt, filename)
+            image_filename = await generator.generate_with_fallback(enhanced_prompt, filename)
             # Both Vercel and Render will now use the /generated mount point
             image_url = f"/generated/{image_filename}"
             scenes.append({

@@ -22,6 +22,39 @@ class ImageGenerator:
             except Exception as e:
                 print(f"Warning: Could not create output dir {self.output_dir}: {e}")
 
+    async def generate_with_fallback(self, prompt: str, filename: str) -> str:
+        """
+        Attempts Stability AI generation. If credits are out (429), 
+        it returns a relevant high-quality placeholder.
+        """
+        try:
+            return self.generate(prompt, filename)
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str or "insufficient_balance" in error_str:
+                print(f"⚠️ Stability AI Credits Out. Using visual fallback for: {prompt[:30]}...")
+                # Search term extraction for better placeholders
+                search = prompt.split(',')[0].replace(' ', ',')
+                # Return a high-quality tech/cinematic placeholder image from Unsplash
+                filepath = os.path.join(self.output_dir, filename)
+                placeholder_url = f"https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=1024&q=80"
+                # For variety, we can use different IDs or search terms
+                if "girl" in prompt.lower():
+                    placeholder_url = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1024&q=80"
+                elif "city" in prompt.lower() or "skyscraper" in prompt.lower():
+                    placeholder_url = "https://images.unsplash.com/photo-1534239143101-1b1c627395c5?auto=format&fit=crop&w=1024&q=80"
+                elif "drone" in prompt.lower() or "technology" in prompt.lower():
+                    placeholder_url = "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1024&q=80"
+
+                import requests
+                img_res = requests.get(placeholder_url)
+                with open(filepath, "wb") as f:
+                    f.write(img_res.content)
+                return filename
+            else:
+                # Re-raise if it's a different kind of error
+                raise e
+
     def generate(self, prompt: str, filename: str) -> str:
         """
         Generates an image using the Stability AI API (Stable Diffusion XL).
