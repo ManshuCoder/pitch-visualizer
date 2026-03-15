@@ -23,31 +23,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Determine if we are on Vercel
-IS_VERCEL = os.environ.get("VERCEL") == "1"
+# Determine if we are on a production-like environment (Vercel or Render)
+IS_PRODUCTION = os.environ.get("VERCEL") == "1" or os.environ.get("RENDER") == "true"
 
-# Set output directory to /tmp if on Vercel, else local static folder
-OUTPUT_DIR = os.path.join("/tmp", "generated_images") if IS_VERCEL else os.path.join("static", "generated_images")
+# ALWAYS use /tmp for generated assets in production for reliability
+# Use local static folder only for local development
+OUTPUT_DIR = os.path.join("/tmp", "generated_images") if IS_PRODUCTION else os.path.join("static", "generated_images")
 
-# Ensure static directories exist locally (skipped on Vercel since it's read-only)
-if not IS_VERCEL:
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+# Ensure directory exists
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Mount static files
+# Mount static files (for CSS/JS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# If on Vercel, we need to serve the /tmp folder manually or use a different mount
-if IS_VERCEL:
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-    app.mount("/generated", StaticFiles(directory=OUTPUT_DIR), name="generated")
+# Mount the generated images directory (mapping both local and cloud paths to /generated)
+app.mount("/generated", StaticFiles(directory=OUTPUT_DIR), name="generated")
 
 templates = Jinja2Templates(directory="templates")
 
 # Initialize modules
 parser = TextParser()
 engine = PromptEngine()
-generator = ImageGenerator()
+# Pass the unified OUTPUT_DIR to the generator
+generator = ImageGenerator(output_dir=OUTPUT_DIR)
 
 class StoryboardRequest(BaseModel):
     text: str
@@ -83,8 +81,8 @@ async def generate_storyboard(request: StoryboardRequest):
         filename = f"scene_{i+1}_{os.urandom(4).hex()}.png"
         try:
             image_filename = generator.generate(enhanced_prompt, filename)
-            # Adjust path for UI
-            image_url = f"/generated/{image_filename}" if IS_VERCEL else f"/static/generated_images/{image_filename}"
+            # Both Vercel and Render will now use the /generated mount point
+            image_url = f"/generated/{image_filename}"
             scenes.append({
                 "image": image_url,
                 "caption": sentence,
