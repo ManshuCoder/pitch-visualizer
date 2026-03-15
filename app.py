@@ -18,7 +18,11 @@ app = FastAPI(title="Pitch Visualizer - Stability Edition")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # You can restrict this to your Vercel URL later
+    allow_origins=[
+        "https://pitch-visualizer-p6h8.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:8000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
