@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Visualizer | From Words to Storyboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 100%);
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .input-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px border var(--border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 3rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1rem;
+            color: var(--text);
+            font-size: 1rem;
+            resize: none;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(to right, var(--primary), #8b5cf6);
+            border: none;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .storyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .scene-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scene-image {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: #1e293b;
+        }
+
+        .scene-content {
+            padding: 1.5rem;
+        }
+
+        .scene-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .scene-caption {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        .scene-prompt {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+            border-top: 1px solid var(--border);
+            padding-top: 0.5rem;
+        }
+
+        footer {
+            margin-top: 5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pitch Visualizer</h1>
+            <p class="subtitle">Transform your narrative into a cinematic storyboard</p>
+        </header>
+
+        <section class="input-section">
+            <textarea id="textInput" placeholder="Enter a short story or pitch (3-5 sentences)...&#10;&#10;Example: A startup builds a smart bottle that tracks hydration. The app reminds users to drink water. It syncs with your phone to show daily progress."></textarea>
+            <button id="generateBtn">
+                <span id="btnText">Generate Storyboard</span>
+                <div id="loader" class="loader"></div>
+            </button>
+        </section>
+
+        <div id="storyboard" class="storyboard-grid">
+            <!-- Scenes will be injected here -->
+        </div>
+
+        <footer>
+            Built with FastAPI & AI Generation APIs • 2024 Challenge 2
+        </footer>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const textInput = document.getElementById('textInput');
+        const storyboard = document.getElementById('storyboard');
+        const loader = document.getElementById('loader');
+        const btnText = document.getElementById('btnText');
+
+        generateBtn.addEventListener('click', async () => {
+            const text = textInput.value.trim();
+            if (!text) return alert('Please enter some text first.');
+
+            // UI State
+            generateBtn.disabled = true;
+            loader.style.display = 'block';
+            btnText.innerText = 'Visualizing...';
+            storyboard.innerHTML = '';
+
+            try {
+                const response = await fetch('/generate-storyboard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    data.scenes.forEach((scene, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'scene-card';
+                        card.style.animationDelay = `${index * 0.2}s`;
+                        
+                        card.innerHTML = `
+                            <img src="${scene.image}" alt="Scene ${index + 1}" class="scene-image">
+                            <div class="scene-content">
+                                <div class="scene-label">Scene ${index + 1}</div>
+                                <div class="scene-caption">${scene.caption}</div>
+                                <div class="scene-prompt">Prompt: ${scene.prompt}</div>
+                            </div>
+                        `;
+                        storyboard.appendChild(card);
+                    });
+                } else {
+                    alert(data.detail || 'Failed to generate storyboard');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred during generation.');
+            } finally {
+                generateBtn.disabled = false;
+                loader.style.display = 'none';
+                btnText.innerText = 'Generate Storyboard';
+            }
+        });
+    </script>
+</body>
+</html>

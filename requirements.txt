@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+nltk
+requests
+python-dotenv
+Pillow
+jinja2
+python-multipart

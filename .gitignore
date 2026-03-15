@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+.env
+static/generated_images/*.png
+!static/generated_images/.placeholder
+.DS_Store
