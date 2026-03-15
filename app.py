@@ -15,15 +15,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Pitch Visualizer - Stability Edition")
 
-# Add CORS middleware
+# Add CORS middleware - simplified for maximum compatibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://pitch-visualizer-p6h8.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:8000"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
